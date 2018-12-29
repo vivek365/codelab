@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:DB/mysql.jdbc.properties</value>
+				<value>classpath:swagger.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="maxActive" value="100" />
+		<property name="maxWait" value="10000" />
+		<property name="maxIdle" value="10" />
+		<!-- To avoid the "Cannot release connection exception occurs when the 
+			connection in pool is idle and system tries to use it. -->
+		<property name="testWhileIdle" value="true" />
+		<property name="validationQuery" value="Select 1" />
+		<property name="timeBetweenEvictionRunsMillis" value="1800000" />
+	</bean>
+	<!-- <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean"> 
+		<property name="dataSource" ref="dataSource" /> <property name="configLocation" 
+		value="classpath:spring/spring-beans.xml" /> </bean> -->
+
+
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<!-- <prop key="hibernate.format_sql">true</prop> -->
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="current_session_context_class">thread</prop>
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
+				<prop key="hibernate.connection.autocommit">true</prop>
+				<prop key="hibernate.max_fetch_depth">5</prop>
+				<prop key="hibernate.default_batch_fetch_size">16</prop>
+				<prop key="hibernate.jdbc.batch_size">25</prop>
+				<prop key="hibernate.jdbc.fetch_size">8</prop>
+				<prop key="hibernate.connection.release_mode">after_transaction</prop>
+				<prop key="hibernate.connection.is-connection-validation-required">
+					true</prop>
+				<prop key="hibernate.connection.autoReconnectForPools">true</prop>
+				<prop key="hibernate.connection.autoReconnect">true</prop>
+				<!-- <prop key="hibernate.hbm2ddl.auto">update</prop> -->
+
+			</props>
+		</property>
+		<property name="packagesToScan">
+			<list>
+				<value>com.codelab.beans</value>
+				<value>com.codelab.fp.beans</value>
+			</list>
+		</property>
+	</bean>
+
+
+	<bean name="OpenSessionInViewInterceptor"
+		class="org.springframework.orm.hibernate5.support.OpenSessionInViewInterceptor">
+		<property name="sessionFactory">
+			<ref bean="sessionFactory" />
+		</property>
+	</bean>
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+
+	<!-- <bean id="txManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager"> 
+		<property name="sessionFactory" ref="sessionFactory" /> </bean> -->
+	<bean id="persistenceExceptionTranslationPostProcessor"
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+	<!-- <bean id="flyway" class="com.codelab.configuration.FlyWayConfig"
+		init-method="repairAndMigrate">
+		<property name="locations" value="classpath:DBScript" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="validateOnMigrate" value="false" />
+		<property name="initOnMigrate" value="true"></property>
+	</bean> -->
+
+	<!-- <bean id="entityManagerFactory" depends-on="flyway"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+		p:persistenceUnitName="linkitpersistenceunit" p:dataSource-ref="dataSource" /> -->
+</beans>

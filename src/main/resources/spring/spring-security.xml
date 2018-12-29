@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bean:beans xmlns:bean="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:c="http://www.springframework.org/schema/c"
+	xmlns="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd">
+
+	<http realm="Protected API" use-expressions="true" create-session="stateless"
+		entry-point-ref="unauthorizedEntryPoint" authentication-manager-ref="restAuthenticationManager">
+		<!--we could not login with basic auth because of: Expected CSRF token 
+			not found -->
+		<csrf disabled="true" />
+		<custom-filter ref="restAuthenticationFilter" position="FORM_LOGIN_FILTER" />
+		<intercept-url pattern="/codelab/**" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/**" access="permitAll" />
+	</http>
+
+	<bean:bean id="unauthorizedEntryPoint"
+		class="com.codelab.configuration.UnauthorizedEntryPoint" />
+
+	<bean:bean id="userDetailService"
+		class="com.codelab.service.impl.UserServiceImpl" />
+
+	<authentication-manager id="restAuthenticationManager">
+		<authentication-provider user-service-ref="userDetailService">
+			<!-- Default password encoder is PlaintextPasswordEncoder, which fits 
+				with our hardcoded users. Obviously not a good choice otherwise. -->
+		</authentication-provider>
+	</authentication-manager>
+
+	<bean:bean id="tokenManager" class="com.codelab.configuration.TokenManagerSingle" />
+
+	<bean:bean id="authenticationService"
+		class="com.codelab.configuration.AuthenticationServiceDefault"
+		c:authenticationManager-ref="restAuthenticationManager"
+		c:tokenManager-ref="tokenManager" />
+
+	<bean:bean id="restAuthenticationFilter"
+		class="com.codelab.configuration.TokenAuthenticationFilter"
+		c:authenticationService-ref="authenticationService" c:logoutLink="/codelab/logout" />
+</bean:beans>

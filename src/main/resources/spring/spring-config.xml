@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+  http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+  http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+  http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+  http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+  http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+	<import resource="classpath:DB/hibernate.cfg.xml" />
+	<context:component-scan base-package="com.codelab" />
+	<mvc:annotation-driven />
+	<context:annotation-config />
+	<mvc:default-servlet-handler />
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<!-- <util:properties id="messagesProperties" location="classpath:/messages.properties"/>
+	<util:properties id="mailProperties" location="classpath:mail.properties"/> -->
+	
+	<!-- <context:property-placeholder location="classpath:mail.properties"/> -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:DB/mysql.jdbc.properties</value>
+				<value>classpath:swagger.properties</value>
+				<value>classpath:mail.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver" />
+	
+	<!-- <bean id="messageSource"
+		class="org.springframework.context.support.ResourceBundleMessageSource"
+		p:basename="messages" /> -->
+		
+		
+		
+	<mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/" />
+	<mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
+	
+	<task:scheduled-tasks scheduler="myScheduler">
+        <task:scheduled ref="emailJob" method="emailSendJob" fixed-delay="25000" />
+    </task:scheduled-tasks>
+ 
+    <task:scheduler id="myScheduler"/>
+
+	<!-- Important for @Secured annotations to work. Here we enable all three 
+		of them - @Secured, @PreAuthorize and @RolesAllowed. You may choose what 
+		you use. -->
+	<security:global-method-security
+		secured-annotations="enabled" pre-post-annotations="enabled"
+		jsr250-annotations="enabled" />
+		
+
+	<!-- Configuring interceptors based on URI -->
+	<!-- <mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean class="com.his.common.security.LogbackMDCInterceptor"></bean>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean class="com.his.common.security.AuthorizationInterceptor">
+			</bean>
+		</mvc:interceptor>
+	</mvc:interceptors> -->
+	
+	<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean" 
+          p:resourceLoaderPath="classpath:/EmailTemplates" 
+          p:preferFileSystemAccess="false"/>
+
+    <!-- Mail sender configured for using Gmail -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl"
+          p:host="smtp.gmail.com"
+          p:username="${username}"
+          p:password="${password}">
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.starttls.enable">true</prop>
+            </props>
+        </property>
+    </bean>
+    
+    <bean id="velocityEmailSender" class="com.codelab.configuration.VelocityEmailSender">
+    	<property name="mailSender" ref="mailSender" />
+		<property name="velocityEngine" ref="velocityEngine" />
+	</bean>
+</beans>
