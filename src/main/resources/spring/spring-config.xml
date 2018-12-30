@@ -48,11 +48,11 @@
 	<mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/" />
 	<mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/" />
 	
-	<task:scheduled-tasks scheduler="myScheduler">
+	<!-- <task:scheduled-tasks scheduler="myScheduler">
         <task:scheduled ref="emailJob" method="emailSendJob" fixed-delay="25000" />
     </task:scheduled-tasks>
  
-    <task:scheduler id="myScheduler"/>
+    <task:scheduler id="myScheduler"/> -->
 
 	<!-- Important for @Secured annotations to work. Here we enable all three 
 		of them - @Secured, @PreAuthorize and @RolesAllowed. You may choose what 
